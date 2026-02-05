@@ -167,7 +167,7 @@ export function RotatingCarousel({
     <div
       ref={containerRef}
       className={cn(
-        "relative flex h-screen w-screen items-center justify-center overflow-hidden bg-background",
+        "relative flex h-screen w-screen items-center justify-center overflow-hidden",
         className
       )}
     >

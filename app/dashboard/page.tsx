@@ -282,7 +282,13 @@ export default function DashboardPage() {
 
   // Show carousel with data
   return (
-    <div className="relative h-screen w-screen overflow-hidden">
+    <div className="relative h-screen w-screen overflow-hidden"
+         style={{
+           backgroundImage: 'url("/images/BackGround.png")',
+           backgroundSize: 'cover',
+           backgroundPosition: 'center',
+           backgroundRepeat: 'no-repeat'
+         }}>
       {/* Header with repository info */}
       <div className="absolute left-0 right-0 top-0 z-20 flex items-center justify-between bg-background/80 px-6 py-4 backdrop-blur-sm">
         <div>
