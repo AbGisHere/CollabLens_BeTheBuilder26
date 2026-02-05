@@ -21,7 +21,15 @@ export function RotatingCarousel({
   sensitivity = 0.15,
   className,
 }: RotatingCarouselProps) {
-  const quantity = items.length
+  // Shuffle items on mount
+  const [shuffledItems, setShuffledItems] = useState<CarouselItemData[]>([])
+  
+  useEffect(() => {
+    const shuffled = [...items].sort(() => Math.random() - 0.5)
+    setShuffledItems(shuffled)
+  }, [items])
+
+  const quantity = shuffledItems.length
   const translateZ = width + height
   const containerRef = useRef<HTMLDivElement>(null)
   const carouselRef = useRef<HTMLDivElement>(null)
@@ -174,9 +182,9 @@ export function RotatingCarousel({
           } as React.CSSProperties
         }
       >
-        {items.map((item, index) => (
+        {shuffledItems.map((item, index) => (
           <CarouselCard
-            key={index}
+            key={`${item.title}-${index}`}
             item={item}
             index={index}
             isSettling={isSettling}
@@ -185,6 +193,7 @@ export function RotatingCarousel({
             height={height}
             translateZ={translateZ}
             quantity={quantity}
+            role={item.role}
           />
         ))}
       </div>

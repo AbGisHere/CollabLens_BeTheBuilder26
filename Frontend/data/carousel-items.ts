@@ -5,6 +5,7 @@ export interface CarouselItemData {
   subtitle?: string
   badge?: string
   footer?: string
+  role?: "forge" | "compass" | "sentinel" | "catalyst" | "anchor" | "parasite" | "common"
   
   // Back face content (shown when card flips on hover)
   backContent?: {
@@ -23,10 +24,11 @@ export const carouselItems: CarouselItemData[] = [
     title: "Mountain Peak",
     subtitle: "Nature",
     badge: "Featured",
-    footer: "Discover the heights",
+    footer: "Discover heights",
+    role: "forge",
     backContent: {
       heading: "Mountain Peak Expedition",
-      description: "Experience breathtaking views from the summit. Perfect for experienced hikers seeking adventure.",
+      description: "Experience breathtaking views from summit. Perfect for experienced hikers seeking adventure.",
       stats: [
         { label: "Altitude", value: "4,200m" },
         { label: "Duration", value: "3 Days" },
@@ -41,6 +43,7 @@ export const carouselItems: CarouselItemData[] = [
     subtitle: "Adventure",
     badge: "Popular",
     footer: "Into the wild",
+    role: "compass",
     backContent: {
       heading: "Forest Trail Journey",
       description: "Immerse yourself in ancient woodlands with guided nature walks.",
@@ -58,6 +61,7 @@ export const carouselItems: CarouselItemData[] = [
     subtitle: "Calm",
     badge: "New",
     footer: "Find your peace",
+    role: "sentinel",
     backContent: {
       heading: "Woodland Retreat",
       description: "A peaceful escape into nature. Perfect for meditation and relaxation.",
@@ -75,9 +79,10 @@ export const carouselItems: CarouselItemData[] = [
     subtitle: "Wonder",
     badge: "Trending",
     footer: "Nature's power",
+    role: "catalyst",
     backContent: {
       heading: "Majestic Waterfall",
-      description: "Witness the raw power of nature at this stunning 200ft cascade.",
+      description: "Witness raw power of nature at this stunning 200ft cascade.",
       stats: [
         { label: "Height", value: "200ft" },
         { label: "Best Time", value: "Spring" },
@@ -92,6 +97,7 @@ export const carouselItems: CarouselItemData[] = [
     subtitle: "Serenity",
     badge: "Editor's Pick",
     footer: "Peaceful waters",
+    role: "anchor",
     backContent: {
       heading: "Serene Lake View",
       description: "Crystal clear waters surrounded by mountains. Ideal for kayaking.",
@@ -109,9 +115,10 @@ export const carouselItems: CarouselItemData[] = [
     subtitle: "Mystery",
     badge: "Featured",
     footer: "Beyond the fog",
+    role: "parasite",
     backContent: {
       heading: "Misty Hills Trek",
-      description: "Explore the mysterious landscape shrouded in morning mist.",
+      description: "Explore mysterious landscape shrouded in morning mist.",
       stats: [
         { label: "Elevation", value: "1,800m" },
         { label: "Trail", value: "8km" },
@@ -126,6 +133,7 @@ export const carouselItems: CarouselItemData[] = [
     subtitle: "Fresh",
     badge: "New",
     footer: "Breathe deep",
+    role: "common",
     backContent: {
       heading: "Green Valley Paradise",
       description: "Lush meadows and fresh mountain air await your arrival.",
@@ -143,15 +151,52 @@ export const carouselItems: CarouselItemData[] = [
     subtitle: "Warmth",
     badge: "Popular",
     footer: "Summer dreams",
+    role: "common",
     backContent: {
       heading: "Golden Fields Farm",
-      description: "Experience rural life among the golden wheat fields at sunset.",
+      description: "Experience rural life among golden wheat fields at sunset.",
       stats: [
         { label: "Season", value: "Summer" },
         { label: "Tours", value: "Daily" },
       ],
       tags: ["Farm", "Sunset", "Rural"],
       ctaText: "Book Tour",
+    },
+  },
+  {
+    image: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=200&h=300&fit=crop",
+    title: "Desert Dunes",
+    subtitle: "Adventure",
+    badge: "New",
+    footer: "Endless sands",
+    role: "common",
+    backContent: {
+      heading: "Desert Dunes Safari",
+      description: "Experience the majesty of endless sand dunes under starlit skies.",
+      stats: [
+        { label: "Area", value: "50km²" },
+        { label: "Best Season", value: "Winter" },
+      ],
+      tags: ["Desert", "Adventure", "Photography"],
+      ctaText: "Book Safari",
+    },
+  },
+  {
+    image: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=200&h=300&fit=crop",
+    title: "Coastal Cliffs",
+    subtitle: "Dramatic",
+    badge: "Featured",
+    footer: "Ocean's edge",
+    role: "common",
+    backContent: {
+      heading: "Coastal Cliffs Adventure",
+      description: "Dramatic cliffs meeting the ocean. Perfect for coastal photography and hiking.",
+      stats: [
+        { label: "Height", value: "300m" },
+        { label: "Trail Length", value: "15km" },
+      ],
+      tags: ["Coastal", "Hiking", "Photography"],
+      ctaText: "Explore Cliffs",
     },
   },
 ]

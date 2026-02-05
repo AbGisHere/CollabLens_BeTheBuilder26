@@ -63,6 +63,17 @@ const roleColors = {
   }
 }
 
+// Role image mappings
+const roleImages = {
+  forge: "/images/Forge.png",
+  compass: "/images/Compass.png",
+  sentinel: "/images/Sentinel.png",
+  catalyst: "/images/Catalyst.png",
+  anchor: "/images/Anchor.png",
+  parasite: "/images/Parasite.png",
+  common: "/images/Common.png"
+}
+
 export function CarouselCard({
   item,
   index,
@@ -98,7 +109,7 @@ export function CarouselCard({
         style={{ transformStyle: "preserve-3d" }}
       >
         {/* Front face (default visible state - shows image) */}
-        <CardFrontFace item={item} index={index} colors={colors} />
+        <CardFrontFace item={item} index={index} colors={colors} roleImage={roleImages[role]} />
 
         {/* Back face - simple animated gradient (visible when rotating/in back) */}
         <CardBackSimple canFlip={canFlip} colors={colors} />
@@ -114,11 +125,13 @@ export function CarouselCard({
 function CardFrontFace({
   item,
   index,
-  colors
+  colors,
+  roleImage
 }: {
   item: CarouselItemData
   index: number
   colors: typeof roleColors.forge
+  roleImage: string
 }) {
   return (
     <div
@@ -131,14 +144,10 @@ function CardFrontFace({
       }}
     >
       <img
-        src={item.image || "/placeholder.svg"}
+        src={roleImage}
         alt={item.title || `Carousel image ${index + 1}`}
         className="absolute h-full w-full object-cover object-center"
         crossOrigin="anonymous"
-        style={{
-          backfaceVisibility: "hidden",
-          WebkitBackfaceVisibility: "hidden",
-        }}
       />
       <div
         className="absolute flex h-full w-full flex-col justify-between p-2.5"
