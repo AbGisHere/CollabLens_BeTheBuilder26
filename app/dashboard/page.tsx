@@ -115,6 +115,8 @@ function transformFiguresToCarouselItems(
 
 export default function DashboardPage() {
   const [repoUrl, setRepoUrl] = useState("")
+  const [githubToken, setGithubToken] = useState("")
+  const [showTokenInput, setShowTokenInput] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
   const { fetchRepoData, figures, timeline, roles, loading, error, repository } = useCollabLensData()
 
@@ -122,7 +124,7 @@ export default function DashboardPage() {
     e.preventDefault()
     if (!repoUrl.trim()) return
     setHasSearched(true)
-    await fetchRepoData(repoUrl)
+    await fetchRepoData(repoUrl, githubToken || undefined)
   }
 
   const carouselData = useMemo(() => {
@@ -181,6 +183,45 @@ export default function DashboardPage() {
                   className="h-14 w-full rounded-xl border border-border bg-card pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:border-[#56A13E] focus:outline-none focus:ring-2 focus:ring-[#56A13E]/20"
                 />
               </div>
+              
+              {/* Token toggle button */}
+              <button
+                type="button"
+                onClick={() => setShowTokenInput(!showTokenInput)}
+                className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <svg
+                  className={`h-4 w-4 transition-transform ${showTokenInput ? "rotate-90" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+                {showTokenInput ? "Hide" : "Add"} GitHub Token (for private repos)
+              </button>
+
+              {/* Token input field */}
+              {showTokenInput && (
+                <div className="relative">
+                  <svg
+                    className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
+                  <input
+                    type="password"
+                    value={githubToken}
+                    onChange={(e) => setGithubToken(e.target.value)}
+                    placeholder="ghp_xxxxxxxxxxxxxxxxxxxx (optional)"
+                    className="h-14 w-full rounded-xl border border-border bg-card pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:border-[#56A13E] focus:outline-none focus:ring-2 focus:ring-[#56A13E]/20"
+                  />
+                </div>
+              )}
+
               <button
                 type="submit"
                 disabled={loading || !repoUrl.trim()}
@@ -199,8 +240,13 @@ export default function DashboardPage() {
           </form>
 
           <p className="text-sm text-muted-foreground">
-            Enter a public GitHub repository URL to analyze contributor patterns
+            Enter a GitHub repository URL to analyze contributor patterns
           </p>
+          {showTokenInput && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Your token is only used for this request and is not stored
+            </p>
+          )}
         </div>
       </main>
     )

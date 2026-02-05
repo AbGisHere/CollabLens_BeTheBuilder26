@@ -4,19 +4,21 @@ import { NextResponse } from "next/server";
    TOKEN (OPTIONAL)
 ============================ */
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const ENV_GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
 /*
 Helper to build headers.
-If token exists → authenticated requests
+Prioritizes user-provided token over environment token.
+If token exists → authenticated requests (5000/hr)
 If not → unauthenticated fallback (60/hr)
 */
-function getHeaders(): HeadersInit {
+function getHeaders(userToken?: string): HeadersInit {
+  const token = userToken || ENV_GITHUB_TOKEN;
   const headers: HeadersInit = {
     "Accept": "application/vnd.github.v3+json",
   };
-  if (GITHUB_TOKEN) {
-    headers["Authorization"] = `Bearer ${GITHUB_TOKEN}`;
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
   return headers;
 }
@@ -25,7 +27,7 @@ function getHeaders(): HeadersInit {
    FETCH COMMITS WITH PAGINATION
 ============================ */
 
-async function fetchAllCommits(owner: string, repo: string) {
+async function fetchAllCommits(owner: string, repo: string, userToken?: string) {
   let allCommits: any[] = [];
   let page = 1;
   let hasMore = true;
@@ -34,7 +36,7 @@ async function fetchAllCommits(owner: string, repo: string) {
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/commits?per_page=100&page=${page}`,
       {
-        headers: getHeaders(),
+        headers: getHeaders(userToken),
       }
     );
 
@@ -50,7 +52,7 @@ async function fetchAllCommits(owner: string, repo: string) {
         try {
           const detailResponse = await fetch(
             `https://api.github.com/repos/${owner}/${repo}/commits/${commit.sha}`,
-            { headers: getHeaders() }
+            { headers: getHeaders(userToken) }
           );
           
           if (detailResponse.ok) {
@@ -154,7 +156,7 @@ function extractRepo(repoUrl: string) {
 
 export async function POST(req: Request) {
   try {
-    const { repoUrl } = await req.json();
+    const { repoUrl, githubToken } = await req.json();
 
     if (!repoUrl) {
       return NextResponse.json(
@@ -174,9 +176,12 @@ export async function POST(req: Request) {
 
     const { owner, repo } = extracted;
 
+    // Use user-provided token or fall back to environment token
+    const token = githubToken || ENV_GITHUB_TOKEN;
+
     /* ---------- FETCH DATA ---------- */
 
-    const rawCommits = await fetchAllCommits(owner, repo);
+    const rawCommits = await fetchAllCommits(owner, repo, token);
 
     /* ---------- CLEAN TIMELINE ---------- */
 
@@ -196,7 +201,7 @@ export async function POST(req: Request) {
       repository: `${owner}/${repo}`,
       timeline,
       figures,
-      usingAuthToken: Boolean(GITHUB_TOKEN) // helpful debug flag
+      usingAuthToken: Boolean(token) // helpful debug flag
     });
 
   } catch (error: any) {
