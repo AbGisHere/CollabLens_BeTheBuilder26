@@ -39,7 +39,7 @@ export const useCollabLensData = () => {
   const [error, setError] = useState<string | null>(null);
   const [repository, setRepository] = useState<string | null>(null);
 
-  const fetchRepoData = async (repoUrl: string) => {
+  const fetchRepoData = async (repoUrl: string, githubToken?: string) => {
     setLoading(true);
     setError(null);
 
@@ -47,7 +47,7 @@ export const useCollabLensData = () => {
       const res = await fetch("/api/repo-data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ repoUrl })
+        body: JSON.stringify({ repoUrl, githubToken })
       });
 
       const data = await res.json();

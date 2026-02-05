@@ -1,13 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useState, use } from "react"
+import { useRouter } from "next/navigation"
 import { ArrowLeft, Github, GitCommit, Calendar, Plus, Minus } from "lucide-react"
 import type { TimelineCommit } from "@/components/useCollabLensData"
 
-export default function ContributorPage({ params }: { params: { username: string } }) {
+export default function ContributorPage({ params }: { params: Promise<{ username: string }> }) {
+  const resolvedParams = use(params)
+  const username = decodeURIComponent(resolvedParams.username)
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [commits, setCommits] = useState<TimelineCommit[]>([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
@@ -19,14 +20,14 @@ export default function ContributorPage({ params }: { params: { username: string
   })
 
   useEffect(() => {
-    // Get data from URL params or localStorage
-    const allCommitsStr = searchParams.get("commits") || localStorage.getItem("allCommits")
-    const statsStr = searchParams.get("stats") || localStorage.getItem(`stats_${params.username}`)
+    // Get data from localStorage (stored by dashboard)
+    const allCommitsStr = localStorage.getItem("allCommits")
+    const statsStr = localStorage.getItem(`stats_${username}`)
     
     if (allCommitsStr) {
       try {
         const allCommits = JSON.parse(allCommitsStr) as TimelineCommit[]
-        const userCommits = allCommits.filter(commit => commit.username === params.username)
+        const userCommits = allCommits.filter(commit => commit.username === username)
         setCommits(userCommits)
       } catch (e) {
         console.error("Failed to parse commits", e)
@@ -43,7 +44,7 @@ export default function ContributorPage({ params }: { params: { username: string
     }
 
     setLoading(false)
-  }, [params.username, searchParams])
+  }, [username])
 
   if (loading) {
     return (
@@ -68,13 +69,13 @@ export default function ContributorPage({ params }: { params: { username: string
 
           <div className="flex items-start gap-4">
             <img
-              src={`https://github.com/${params.username}.png`}
-              alt={params.username}
+              src={`https://github.com/${username}.png`}
+              alt={username}
               className="h-16 w-16 rounded-full border-2 border-[#56A13E]"
             />
             <div className="flex-1">
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-foreground">{params.username}</h1>
+                <h1 className="text-2xl font-bold text-foreground">{username}</h1>
                 {stats.role && (
                   <span className="rounded-full bg-[#56A13E]/20 px-3 py-1 text-xs font-semibold text-[#56A13E]">
                     {stats.role}
@@ -82,7 +83,7 @@ export default function ContributorPage({ params }: { params: { username: string
                 )}
               </div>
               <a
-                href={`https://github.com/${params.username}`}
+                href={`https://github.com/${username}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-1 flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-[#56A13E]"
