@@ -1,4 +1,3 @@
-import axios from "axios";
 import { NextResponse } from "next/server";
 
 /* ============================
@@ -12,13 +11,14 @@ Helper to build headers.
 If token exists → authenticated requests
 If not → unauthenticated fallback (60/hr)
 */
-function getHeaders() {
+function getHeaders(): HeadersInit {
+  const headers: HeadersInit = {
+    "Accept": "application/vnd.github.v3+json",
+  };
   if (GITHUB_TOKEN) {
-    return {
-      Authorization: `Bearer ${GITHUB_TOKEN}`
-    };
+    headers["Authorization"] = `Bearer ${GITHUB_TOKEN}`;
   }
-  return {};
+  return headers;
 }
 
 /* ============================
@@ -29,16 +29,21 @@ async function fetchAllCommits(owner: string, repo: string) {
   let allCommits: any[] = [];
 
   for (let page = 1; page <= 3; page++) {
-    const response = await axios.get(
+    const response = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/commits?per_page=100&page=${page}`,
       {
-        headers: getHeaders()
+        headers: getHeaders(),
       }
     );
 
-    allCommits.push(...response.data);
+    if (!response.ok) {
+      throw new Error(`GitHub API error: ${response.status}`);
+    }
 
-    if (response.data.length < 100) break;
+    const data = await response.json();
+    allCommits.push(...data);
+
+    if (data.length < 100) break;
   }
 
   return allCommits;
@@ -48,21 +53,31 @@ async function fetchAllCommits(owner: string, repo: string) {
    FETCH CONTRIBUTOR STATS
 ============================ */
 
-async function fetchContributorStats(owner: string, repo: string) {
-  const response = await axios.get(
-    `https://api.github.com/repos/${owner}/${repo}/stats/contributors`,
-    {
-      headers: getHeaders(),
-      validateStatus: () => true // allow 202
-    }
-  );
+async function fetchContributorStats(owner: string, repo: string, retries = 3): Promise<any[]> {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    const response = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/stats/contributors`,
+      {
+        headers: getHeaders(),
+      }
+    );
 
-  if (response.status === 202) {
-    // GitHub still computing stats
+    if (response.status === 200) {
+      const data = await response.json();
+      if (data) return data;
+    }
+
+    if (response.status === 202) {
+      // GitHub still computing stats, wait and retry
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      continue;
+    }
+
+    // Other errors
     return [];
   }
 
-  return response.data || [];
+  return [];
 }
 
 /* ============================
@@ -142,7 +157,7 @@ export async function POST(req: Request) {
 
     /* ---------- RATE LIMIT HANDLING ---------- */
 
-    if (error.response?.status === 403) {
+    if (error.message?.includes("403")) {
       return NextResponse.json(
         {
           error: "GitHub API rate limit exceeded. Try later or add a token."
@@ -154,7 +169,7 @@ export async function POST(req: Request) {
     console.error(error);
 
     return NextResponse.json(
-      { error: "Server error" },
+      { error: error.message || "Server error" },
       { status: 500 }
     );
   }

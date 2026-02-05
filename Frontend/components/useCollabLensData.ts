@@ -34,53 +34,95 @@ export const useCollabLensData = () => {
   const [timeline, setTimeline] = useState<TimelineCommit[]>([]);
   const [roles, setRoles] = useState<Roles>({});
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [repository, setRepository] = useState<string | null>(null);
+
   const fetchRepoData = async (repoUrl: string) => {
-    const res = await fetch("BACKEND_URL_PLACEHOLDER", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ repoUrl })
-    });
+    setLoading(true);
+    setError(null);
 
-    const data = await res.json();
+    try {
+      const res = await fetch("/api/repo-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ repoUrl })
+      });
 
-    setFigures(data.figures);
-    setTimeline(data.timeline);
+      const data = await res.json();
 
-    assignRoles(data.figures, data.timeline);
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to fetch repository data");
+      }
+
+      setFigures(data.figures || []);
+      setTimeline(data.timeline || []);
+      setRepository(data.repository);
+
+      if (data.figures && data.figures.length > 0) {
+        assignRoles(data.figures, data.timeline || []);
+      }
+    } catch (err: any) {
+      setError(err.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
   /* ---------- ROLE LOGIC ---------- */
 
   const assignRoles = (figures: Figure[], timeline: TimelineCommit[]) => {
-    const used = new Set<string>();
+    if (!figures || figures.length === 0) {
+      setRoles({});
+      return;
+    }
 
-    const forge = [...figures].sort(
+    const used = new Set<string>();
+    const newRoles: Roles = {};
+
+    // Helper to get next available figure for a role
+    const getAvailable = () => figures.filter(u => !used.has(u.username));
+
+    // Forge: highest additions + commits
+    const forgeCandidate = [...figures].sort(
       (a, b) => (b.additions + b.totalCommits) - (a.additions + a.totalCommits)
     )[0];
-    used.add(forge.username);
+    if (forgeCandidate) {
+      newRoles.forge = forgeCandidate;
+      used.add(forgeCandidate.username);
+    }
 
-    const compass = [...figures]
-      .filter(u => !used.has(u.username))
-      .sort((a, b) => b.activeWeeks - a.activeWeeks)[0];
-    used.add(compass.username);
+    // Compass: most active weeks
+    const compassCandidate = getAvailable().sort((a, b) => b.activeWeeks - a.activeWeeks)[0];
+    if (compassCandidate) {
+      newRoles.compass = compassCandidate;
+      used.add(compassCandidate.username);
+    }
 
-    const sentinel = [...figures]
-      .filter(u => !used.has(u.username))
-      .sort(
-        (a, b) =>
-          b.deletions / (b.additions || 1) -
-          a.deletions / (a.additions || 1)
-      )[0];
-    used.add(sentinel.username);
+    // Sentinel: highest deletion ratio
+    const sentinelCandidate = getAvailable().sort(
+      (a, b) =>
+        b.deletions / (b.additions || 1) -
+        a.deletions / (a.additions || 1)
+    )[0];
+    if (sentinelCandidate) {
+      newRoles.sentinel = sentinelCandidate;
+      used.add(sentinelCandidate.username);
+    }
 
+    // Catalyst: burst score (most commits in timeline)
     const burstScore = (username: string) =>
       timeline.filter(c => c.username === username).length;
 
-    const catalyst = [...figures]
-      .filter(u => !used.has(u.username))
-      .sort((a, b) => burstScore(b.username) - burstScore(a.username))[0];
-    used.add(catalyst.username);
+    const catalystCandidate = getAvailable().sort(
+      (a, b) => burstScore(b.username) - burstScore(a.username)
+    )[0];
+    if (catalystCandidate) {
+      newRoles.catalyst = catalystCandidate;
+      used.add(catalystCandidate.username);
+    }
 
+    // Anchor: longest contribution span
     const anchorScore = (username: string) => {
       const commits = timeline
         .filter(c => c.username === username)
@@ -91,23 +133,30 @@ export const useCollabLensData = () => {
       return commits[commits.length - 1] - commits[0];
     };
 
-    const anchor = [...figures]
-      .filter(u => !used.has(u.username))
-      .sort((a, b) => anchorScore(b.username) - anchorScore(a.username))[0];
-    used.add(anchor.username);
+    const anchorCandidate = getAvailable().sort(
+      (a, b) => anchorScore(b.username) - anchorScore(a.username)
+    )[0];
+    if (anchorCandidate) {
+      newRoles.anchor = anchorCandidate;
+      used.add(anchorCandidate.username);
+    }
 
-    const parasite = [...figures]
-      .filter(u => !used.has(u.username))
-      .sort(
-        (a, b) =>
-          (a.totalCommits + a.activeWeeks + a.additions) -
-          (b.totalCommits + b.activeWeeks + b.additions)
-      )[0];
+    // Parasite: lowest overall contribution
+    const parasiteCandidate = getAvailable().sort(
+      (a, b) =>
+        (a.totalCommits + a.activeWeeks + a.additions) -
+        (b.totalCommits + b.activeWeeks + b.additions)
+    )[0];
+    if (parasiteCandidate) {
+      newRoles.parasite = parasiteCandidate;
+      used.add(parasiteCandidate.username);
+    }
 
-    const common = figures.filter(u => !used.has(u.username));
+    // Common: remaining contributors
+    newRoles.common = figures.filter(u => !used.has(u.username));
 
-    setRoles({ forge, compass, sentinel, catalyst, anchor, parasite, common });
+    setRoles(newRoles);
   };
 
-  return { fetchRepoData, figures, timeline, roles };
+  return { fetchRepoData, figures, timeline, roles, loading, error, repository };
 };
