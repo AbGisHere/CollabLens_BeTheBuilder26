@@ -22,10 +22,10 @@ A collaborative team visualization tool that analyzes GitHub repository data and
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **Next.js 14** - React framework with App Router
+- **Next.js 16** - React framework with App Router
 - **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first styling
-- **Framer Motion** - Smooth animations and transitions
+- **Tailwind CSS v4** - Utility-first styling
+- **shadcn/ui** - Component library
 
 ### Components
 - **Rotating Carousel**: 3D card carousel with hover interactions
@@ -33,39 +33,35 @@ A collaborative team visualization tool that analyzes GitHub repository data and
 - **Elegant Button**: Custom styled button with hover effects
 - **Commit Dropdown**: Collapsible commit history viewer
 
-### Backend
-- **Node.js** - Server runtime
-- **TypeScript** - Type-safe backend development
-- **GitHub API** - Repository data fetching
-- **Role Assignment Algorithm**: Custom logic for contributor analysis
-
 ## 📁 Project Structure
 
 ```
 collablens/
-├── Frontend/
-│   ├── app/
-│   │   ├── landing/
-│   │   └── page.tsx          # Landing page with scroll animation
+├── app/
+│   ├── api/
+│   │   └── repo-data/
+│   │       └── route.ts      # API endpoint for repo data
+│   ├── contributor/
+│   │   └── [username]/
+│   │       └── page.tsx      # Contributor detail page
 │   ├── dashboard/
 │   │   └── page.tsx          # Main dashboard with carousel
-│   └── layout.tsx              # Root layout
-│   ├── components/
-│   │   ├── carousel-card.tsx     # Individual contributor cards
-│   │   ├── rotating-carousel.tsx # 3D carousel component
-│   │   ├── elegant-button.tsx   # Custom button component
-│   │   ├── commit-dropdown.tsx  # Commit history viewer
-│   │   └── useCollabLensData.ts # Data fetching hook
-│   ├── data/
-│   │   └── carousel-items.ts     # Type definitions
-│   └── public/
-│       └── images/             # Role-specific images
-│           ├── Forge.png
-│           ├── Compass.png
-│           └── Parasite.png
-└── Backend/
-    ├── .env.example           # Environment variables template
-    └── [server files]       # API endpoints and data processing
+│   ├── landing/
+│   │   ├── layout.tsx
+│   │   └── page.tsx          # Landing page
+│   ├── globals.css
+│   ├── layout.tsx            # Root layout
+│   └── page.tsx              # Home page
+├── components/
+│   ├── carousel-card.tsx     # Individual contributor cards
+│   ├── rotating-carousel.tsx # 3D carousel component
+│   ├── elegant-button.tsx    # Custom button component
+│   ├── CommitDropdown.tsx    # Commit history viewer
+│   └── useCollabLensData.ts  # Data fetching hook
+├── data/
+│   └── carousel-items.ts     # Type definitions
+└── public/
+    └── images/               # Role-specific images
 ```
 
 ## 🚀 Deployment
@@ -85,111 +81,35 @@ collablens/
 
 2. **Install dependencies**
    ```bash
-   # Frontend
-   cd Frontend
-   npm install
-   
-   # Backend (if applicable)
-   cd ../Backend
    npm install
    ```
 
-3. **Environment Configuration**
-   ```bash
-   # Backend
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
+### Development
 
-### Development Deployment
-
-#### Option 1: Local Development
 ```bash
-# Start Frontend
-cd Frontend
-npm run dev
-
-# Start Backend (in separate terminal)
-cd Backend
 npm run dev
 ```
 
-#### Option 2: Docker Deployment
-```bash
-# Build and run with Docker
-docker-compose up -d
-```
+### Production Build
 
-#### Option 3: Vercel (Recommended for Frontend)
 ```bash
-# Deploy frontend to Vercel
-cd Frontend
 npm run build
-vercel --prod
-
-# Configure environment variables in Vercel dashboard
-NEXT_PUBLIC_API_URL=your-backend-url
+npm run start
 ```
 
-#### Option 4: Railway/Render (Backend)
-```bash
-# Deploy backend to Railway/Render
-cd Backend
-npm run build
-railway up  # or render deploy
+### Deploy to Vercel (Recommended)
 
-# Configure environment variables
-GITHUB_TOKEN=your-github-token
-PORT=3001
-```
-
-### Production Deployment
-
-#### Full Stack Deployment
-```bash
-# 1. Deploy Backend First
-# Deploy to Railway/Render
-# Note the backend URL
-
-# 2. Configure Frontend
-# Update NEXT_PUBLIC_API_URL in frontend/.env.local
-NEXT_PUBLIC_API_URL=https://your-backend-url.railway.app
-
-# 3. Deploy Frontend
-# Deploy to Vercel/Netlify
-cd Frontend
-npm run build
-vercel --prod
-```
+1. Push to GitHub
+2. Import project in Vercel
+3. Deploy automatically
 
 ## 🔧 Configuration
-
-### Environment Variables
-
-#### Frontend
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3001  # Backend API URL
-NEXT_PUBLIC_APP_NAME=CollabLens       # Application name
-```
-
-#### Backend
-```env
-GITHUB_TOKEN=ghp_xxxxxxxxxxxx        # GitHub personal access token
-PORT=3001                           # Server port
-NODE_ENV=production                   # Environment mode
-```
 
 ### Customization
 
 #### Adding New Role Images
-1. Add image to `Frontend/public/images/`
-2. Update `roleImages` in `components/carousel-card.tsx`:
-   ```typescript
-   const roleImages = {
-     // ...existing roles
-     newRole: "/images/NewRole.png"
-   }
-   ```
+1. Add image to `public/images/`
+2. Update `roleImages` in `components/carousel-card.tsx`
 
 #### Modifying Role Assignment
 Update the `assignRoles` function in `components/useCollabLensData.ts` to customize role assignment logic.
@@ -211,7 +131,6 @@ Update the `assignRoles` function in `components/useCollabLensData.ts` to custom
 **Images Not Displaying**
 - Confirm images are in `public/images/`
 - Check file paths in `roleImages` mapping
-- Verify image formats (PNG recommended)
 
 **Scroll Animation Issues**
 - Ensure main container has `position: fixed`
