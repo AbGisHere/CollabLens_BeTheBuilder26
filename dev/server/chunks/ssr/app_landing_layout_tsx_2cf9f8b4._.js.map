@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///D:/acm/CollabLens_BeTheBuilder26/Frontend/app/landing/layout.tsx"],"sourcesContent":["import type { Metadata } from 'next'\r\nimport '../globals.css'\r\n\r\nexport const metadata: Metadata = {\r\n  title: 'CollabLens',\r\n  description: 'FrontEnd by AbG',\r\n}\r\n\r\nexport default function LandingLayout({\r\n  children,\r\n}: Readonly<{\r\n  children: React.ReactNode\r\n}>) {\r\n  return (\r\n    <html lang=\"en\">\r\n      <body className=\"font-sans antialiased\">\r\n        {children}\r\n      </body>\r\n    </html>\r\n  )\r\n}\r\n"],"names":[],"mappings":";;;;;;;;;AAGO,MAAM,WAAqB;IAChC,OAAO;IACP,aAAa;AACf;AAEe,SAAS,cAAc,EACpC,QAAQ,EAGR;IACA,qBACE,8OAAC;QAAK,MAAK;kBACT,cAAA,8OAAC;YAAK,WAAU;sBACb;;;;;;;;;;;AAIT"}}]
-}
