@@ -20,46 +20,46 @@ interface CarouselCardProps {
 // Role color mappings
 const roleColors = {
   forge: {
-    primary: "#FF6B35", // Orange
-    secondary: "#FF8C42",
-    accent: "#FFA559",
-    gradient: "from-[#FF6B35] to-[#FF8C42]"
+    primary: "#Bd7120", // Orange
+    secondary: "#D4842a",
+    accent: "#E6a050",
+    gradient: "from-[#Bd7120] to-[#D4842a]"
   },
   compass: {
-    primary: "#4ECDC4", // Teal
-    secondary: "#44A3AA",
-    accent: "#95E1D3",
-    gradient: "from-[#4ECDC4] to-[#44A3AA]"
+    primary: "#36ae96", // Blue-Green
+    secondary: "#2e9b85",
+    accent: "#4fc0a8",
+    gradient: "from-[#36ae96] to-[#2e9b85]"
   },
   sentinel: {
-    primary: "#95E1D3", // Mint
-    secondary: "#78C4B8",
-    accent: "#B8F3E0",
-    gradient: "from-[#95E1D3] to-[#78C4B8]"
+    primary: "#643973", // Purple
+    secondary: "#7a4a8a",
+    accent: "#8e5ca0",
+    gradient: "from-[#643973] to-[#7a4a8a]"
   },
   catalyst: {
-    primary: "#F38181", // Coral
-    secondary: "#E85A5A",
-    accent: "#F8B195",
-    gradient: "from-[#F38181] to-[#E85A5A]"
+    primary: "#56a13e", // Green
+    secondary: "#4a8f35",
+    accent: "#68b554",
+    gradient: "from-[#56a13e] to-[#4a8f35]"
   },
   anchor: {
-    primary: "#AA96DA", // Purple
-    secondary: "#8B7AB8",
-    accent: "#C8B6DB",
-    gradient: "from-[#AA96DA] to-[#8B7AB8]"
+    primary: "#Aeaeae", // Silver
+    secondary: "#9a9a9a",
+    accent: "#c2c2c2",
+    gradient: "from-[#Aeaeae] to-[#9a9a9a]"
   },
   parasite: {
-    primary: "#FCBAD3", // Pink
-    secondary: "#F8A5C2",
-    accent: "#FFD6E0",
-    gradient: "from-[#FCBAD3] to-[#F8A5C2]"
+    primary: "#a7373c", // Red
+    secondary: "#912f34",
+    accent: "#b8464c",
+    gradient: "from-[#a7373c] to-[#912f34]"
   },
   common: {
-    primary: "#A8DADC", // Light Blue
-    secondary: "#457B9D",
-    accent: "#F1FAEE",
-    gradient: "from-[#A8DADC] to-[#457B9D]"
+    primary: "#808080", // Grey
+    secondary: "#6b6b6b",
+    accent: "#999999",
+    gradient: "from-[#808080] to-[#6b6b6b]"
   }
 }
 
