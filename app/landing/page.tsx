@@ -44,6 +44,7 @@ export default function LandingPage() {
           alt="Dashed arrow"
           width={1315}
           height={1860}
+          loading="eager"
           className="w-full h-full object-contain"
         />
       </div>
