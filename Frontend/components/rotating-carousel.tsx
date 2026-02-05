@@ -22,14 +22,16 @@ export function RotatingCarousel({
   className,
 }: RotatingCarouselProps) {
   // Shuffle items on mount
-  const [shuffledItems, setShuffledItems] = useState<CarouselItemData[]>([])
+  const [shuffledItems, setShuffledItems] = useState<CarouselItemData[]>(items)
   
   useEffect(() => {
-    const shuffled = [...items].sort(() => Math.random() - 0.5)
-    setShuffledItems(shuffled)
+    if (items.length > 0) {
+      const shuffled = [...items].sort(() => Math.random() - 0.5)
+      setShuffledItems(shuffled)
+    }
   }, [items])
 
-  const quantity = shuffledItems.length
+  const quantity = shuffledItems.length || 1
   const translateZ = width + height
   const containerRef = useRef<HTMLDivElement>(null)
   const carouselRef = useRef<HTMLDivElement>(null)

@@ -287,7 +287,15 @@ function CardBackDetailed({
 
         {/* CTA */}
         <div className="relative z-10">
-          <button className={`w-full rounded-md bg-gradient-to-r ${colors.gradient} py-1.5 text-[10px] font-medium text-white transition-opacity hover:opacity-90`}>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation()
+              if (typeof window !== 'undefined') {
+                window.location.href = `/contributor/${item.title}`
+              }
+            }}
+            className={`w-full rounded-md bg-gradient-to-r ${colors.gradient} py-1.5 text-[10px] font-medium text-white transition-opacity hover:opacity-90`}
+          >
             {item.backContent?.ctaText || "Learn More"}
           </button>
         </div>

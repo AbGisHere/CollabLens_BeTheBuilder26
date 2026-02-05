@@ -1,4 +1,3 @@
-import axios from "axios";
 import { NextResponse } from "next/server";
 
 /* ============================
@@ -12,13 +11,14 @@ Helper to build headers.
 If token exists → authenticated requests
 If not → unauthenticated fallback (60/hr)
 */
-function getHeaders() {
+function getHeaders(): HeadersInit {
+  const headers: HeadersInit = {
+    "Accept": "application/vnd.github.v3+json",
+  };
   if (GITHUB_TOKEN) {
-    return {
-      Authorization: `Bearer ${GITHUB_TOKEN}`
-    };
+    headers["Authorization"] = `Bearer ${GITHUB_TOKEN}`;
   }
-  return {};
+  return headers;
 }
 
 /* ============================
@@ -27,42 +27,110 @@ function getHeaders() {
 
 async function fetchAllCommits(owner: string, repo: string) {
   let allCommits: any[] = [];
+  let page = 1;
+  let hasMore = true;
 
-  for (let page = 1; page <= 3; page++) {
-    const response = await axios.get(
+  while (hasMore) {
+    const response = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/commits?per_page=100&page=${page}`,
       {
-        headers: getHeaders()
+        headers: getHeaders(),
       }
     );
 
-    allCommits.push(...response.data);
+    if (!response.ok) {
+      throw new Error(`GitHub API error: ${response.status}`);
+    }
 
-    if (response.data.length < 100) break;
+    const data = await response.json();
+    
+    // Fetch detailed stats for each commit (including additions/deletions)
+    const detailedCommits = await Promise.all(
+      data.map(async (commit: any) => {
+        try {
+          const detailResponse = await fetch(
+            `https://api.github.com/repos/${owner}/${repo}/commits/${commit.sha}`,
+            { headers: getHeaders() }
+          );
+          
+          if (detailResponse.ok) {
+            const detail = await detailResponse.json();
+            return { ...commit, stats: detail.stats };
+          }
+        } catch (e) {
+          // If detail fetch fails, return commit without stats
+          console.warn(`Failed to fetch stats for commit ${commit.sha}`);
+        }
+        return commit;
+      })
+    );
+    
+    allCommits.push(...detailedCommits);
+
+    // Continue if we got a full page of results
+    if (data.length < 100) {
+      hasMore = false;
+    } else {
+      page++;
+    }
   }
 
   return allCommits;
 }
 
 /* ============================
-   FETCH CONTRIBUTOR STATS
+   DERIVE CONTRIBUTOR DATA FROM COMMITS
 ============================ */
 
-async function fetchContributorStats(owner: string, repo: string) {
-  const response = await axios.get(
-    `https://api.github.com/repos/${owner}/${repo}/stats/contributors`,
-    {
-      headers: getHeaders(),
-      validateStatus: () => true // allow 202
+function deriveContributorStats(commits: any[]) {
+  const contributorMap = new Map<string, {
+    username: string;
+    totalCommits: number;
+    additions: number;
+    deletions: number;
+    firstCommit: Date;
+    lastCommit: Date;
+    commitDates: Set<string>;
+  }>();
+
+  commits.forEach(commit => {
+    const username = commit.author?.login ?? "Unknown";
+    const date = new Date(commit.commit.author.date);
+    const additions = commit.stats?.additions ?? 0;
+    const deletions = commit.stats?.deletions ?? 0;
+
+    if (!contributorMap.has(username)) {
+      contributorMap.set(username, {
+        username,
+        totalCommits: 0,
+        additions: 0,
+        deletions: 0,
+        firstCommit: date,
+        lastCommit: date,
+        commitDates: new Set()
+      });
     }
-  );
 
-  if (response.status === 202) {
-    // GitHub still computing stats
-    return [];
-  }
+    const contributor = contributorMap.get(username)!;
+    contributor.totalCommits++;
+    contributor.additions += additions;
+    contributor.deletions += deletions;
+    
+    if (date < contributor.firstCommit) contributor.firstCommit = date;
+    if (date > contributor.lastCommit) contributor.lastCommit = date;
+    
+    // Track unique weeks for active weeks calculation
+    const weekKey = `${date.getFullYear()}-W${Math.floor(date.getTime() / (7 * 24 * 60 * 60 * 1000))}`;
+    contributor.commitDates.add(weekKey);
+  });
 
-  return response.data || [];
+  return Array.from(contributorMap.values()).map(contributor => ({
+    username: contributor.username,
+    totalCommits: contributor.totalCommits,
+    activeWeeks: contributor.commitDates.size,
+    additions: contributor.additions,
+    deletions: contributor.deletions
+  }));
 }
 
 /* ============================
@@ -109,7 +177,6 @@ export async function POST(req: Request) {
     /* ---------- FETCH DATA ---------- */
 
     const rawCommits = await fetchAllCommits(owner, repo);
-    const rawContributors = await fetchContributorStats(owner, repo);
 
     /* ---------- CLEAN TIMELINE ---------- */
 
@@ -121,15 +188,9 @@ export async function POST(req: Request) {
       commitUrl: commit.html_url
     }));
 
-    /* ---------- CLEAN FIGURES ---------- */
+    /* ---------- DERIVE FIGURES FROM COMMITS ---------- */
 
-    const figures = rawContributors.map((user: any) => ({
-      username: user.author.login,
-      totalCommits: user.total,
-      activeWeeks: user.weeks.filter((w: any) => w.c > 0).length,
-      additions: user.weeks.reduce((sum: number, w: any) => sum + w.a, 0),
-      deletions: user.weeks.reduce((sum: number, w: any) => sum + w.d, 0)
-    }));
+    const figures = deriveContributorStats(rawCommits);
 
     return NextResponse.json({
       repository: `${owner}/${repo}`,
@@ -142,7 +203,7 @@ export async function POST(req: Request) {
 
     /* ---------- RATE LIMIT HANDLING ---------- */
 
-    if (error.response?.status === 403) {
+    if (error.message?.includes("403")) {
       return NextResponse.json(
         {
           error: "GitHub API rate limit exceeded. Try later or add a token."
@@ -154,7 +215,7 @@ export async function POST(req: Request) {
     console.error(error);
 
     return NextResponse.json(
-      { error: "Server error" },
+      { error: error.message || "Server error" },
       { status: 500 }
     );
   }
