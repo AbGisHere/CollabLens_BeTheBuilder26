@@ -1,8 +1,0 @@
-{
-  "/_not-found/page": "app/_not-found/page.js",
-  "/api/repo-data/route": "app/api/repo-data/route.js",
-  "/contributor/[username]/page": "app/contributor/[username]/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/landing/page": "app/landing/page.js",
-  "/page": "app/page.js"
-}
