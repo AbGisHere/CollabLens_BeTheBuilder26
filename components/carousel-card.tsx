@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { cn } from "@/lib/utils"
 import type { CarouselItemData } from "@/data/carousel-items"
 
@@ -87,6 +88,13 @@ export function CarouselCard({
 }: CarouselCardProps) {
   const canFlip = isSettling && isInFront
   const colors = roleColors[role]
+  const [isFlipped, setIsFlipped] = useState(false)
+
+  const handleClick = () => {
+    if (canFlip) {
+      setIsFlipped(!isFlipped)
+    }
+  }
 
   return (
     <div
@@ -98,13 +106,15 @@ export function CarouselCard({
         transform: `rotateY(${(360 / quantity) * index}deg) translateZ(${translateZ}px)`,
         backfaceVisibility: "visible",
       }}
+      onClick={handleClick}
     >
       {/* Card content wrapper - handles the flip when settling and card is in front */}
       <div
         className={cn(
           "card-content relative h-full w-full rounded-md border border-white/20 transition-all duration-300",
           canFlip &&
-            "group-hover:[transform:rotateY(180deg)] group-hover:shadow-[0px_0px_20px_1px_#ffbb763f] group-hover:border-white/45"
+            "group-hover:[transform:rotateY(180deg)] group-hover:shadow-[0px_0px_20px_1px_#ffbb763f] group-hover:border-white/45",
+          isFlipped && canFlip && "[transform:rotateY(180deg)] shadow-[0px_0px_20px_1px_#ffbb763f] border-white/45"
         )}
         style={{ transformStyle: "preserve-3d" }}
       >
@@ -112,10 +122,10 @@ export function CarouselCard({
         <CardFrontFace item={item} index={index} colors={colors} roleImage={roleImages[role]} />
 
         {/* Back face - simple animated gradient (visible when rotating/in back) */}
-        <CardBackSimple canFlip={canFlip} colors={colors} />
+        <CardBackSimple canFlip={canFlip} colors={colors} isFlipped={isFlipped} />
 
         {/* Detailed back face - only for front cards on hover */}
-        <CardBackDetailed item={item} canFlip={canFlip} colors={colors} />
+        <CardBackDetailed item={item} canFlip={canFlip} colors={colors} isFlipped={isFlipped} />
       </div>
     </div>
   )
@@ -188,12 +198,13 @@ function CardFrontFace({
 }
 
 // Simple back face - animated gradient with floating circles
-function CardBackSimple({ canFlip, colors }: { canFlip: boolean; colors: typeof roleColors.forge }) {
+function CardBackSimple({ canFlip, colors, isFlipped }: { canFlip: boolean; colors: typeof roleColors.forge; isFlipped?: boolean }) {
   return (
     <div
       className={cn(
         "card-back absolute flex h-full w-full items-center justify-center overflow-hidden rounded-md",
-        canFlip && "group-hover:opacity-0"
+        canFlip && "group-hover:opacity-0",
+        isFlipped && canFlip && "opacity-0"
       )}
       style={{
         backgroundColor: colors.primary,
@@ -219,17 +230,20 @@ function CardBackSimple({ canFlip, colors }: { canFlip: boolean; colors: typeof 
 function CardBackDetailed({
   item,
   canFlip,
-  colors
+  colors,
+  isFlipped
 }: {
   item: CarouselItemData
   canFlip: boolean
   colors: typeof roleColors.forge
+  isFlipped?: boolean
 }) {
   return (
     <div
       className={cn(
         "card-back-detail absolute flex h-full w-full items-center justify-center overflow-hidden rounded-md opacity-0",
-        canFlip && "group-hover:opacity-100"
+        canFlip && "group-hover:opacity-100",
+        isFlipped && canFlip && "opacity-100"
       )}
       style={{
         backgroundColor: colors.primary,

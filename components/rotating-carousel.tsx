@@ -19,6 +19,7 @@ export function RotatingCarousel({
   width = 190,
   height = 254,
   sensitivity = 0.15,
+
   className,
 }: RotatingCarouselProps) {
   // Shuffle items on mount
@@ -31,8 +32,10 @@ export function RotatingCarousel({
     }
   }, [items])
 
-  const quantity = shuffledItems.length || 1
-  const translateZ = width + height
+  const quantity = shuffledItems.length || 1  ;
+  const radiusMultiplier = quantity <= 10 ? 1 : 1 + (quantity - 10) * 0.05  ;
+  const translateZ = (width + height) * radiusMultiplier
+  const perspective = 1000 + (translateZ * 2.5)
   const containerRef = useRef<HTMLDivElement>(null)
   const carouselRef = useRef<HTMLDivElement>(null)
 
@@ -121,7 +124,7 @@ export function RotatingCarousel({
       setCurrentAngle(currentRotation.current)
 
       if (carouselRef.current) {
-        carouselRef.current.style.transform = `perspective(1000px) rotateX(-3deg) rotateY(${currentRotation.current}deg)`
+        carouselRef.current.style.transform = `perspective(${perspective}px) rotateX(-3deg) rotateY(${currentRotation.current}deg)`
       }
 
       animationFrame.current = requestAnimationFrame(animate)
@@ -134,7 +137,7 @@ export function RotatingCarousel({
         cancelAnimationFrame(animationFrame.current)
       }
     }
-  }, [anglePerCard])
+  }, [anglePerCard, perspective])
 
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
@@ -163,6 +166,64 @@ export function RotatingCarousel({
     }
   }, [sensitivity])
 
+  // Add touch support for mobile devices
+  useEffect(() => {
+    let touchStartX = 0
+    let touchStartY = 0
+    let lastTouchX = 0
+    let lastTouchTime = 0
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX = e.touches[0].clientX
+      touchStartY = e.touches[0].clientY
+      lastTouchX = touchStartX
+      lastTouchTime = Date.now()
+      
+      setIsStopped(false)
+      setIsSettling(false)
+      hasSnapped.current = false
+    }
+
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault()
+      
+      const touchX = e.touches[0].clientX
+      const touchY = e.touches[0].clientY
+      
+      const deltaX = touchX - lastTouchX
+      const deltaY = touchY - touchStartY
+      
+      // Only rotate if horizontal movement is more dominant
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        lastScrollTime.current = Date.now()
+        
+        // Adjust sensitivity for touch (negative to match scroll direction)
+        targetRotation.current -= deltaX * (sensitivity * 3)
+      }
+      
+      lastTouchX = touchX
+    }
+
+    const handleTouchEnd = () => {
+      lastScrollTime.current = Date.now()
+    }
+
+    const container = containerRef.current
+    if (container) {
+      container.addEventListener("touchstart", handleTouchStart, { passive: false })
+      container.addEventListener("touchmove", handleTouchMove, { passive: false })
+      container.addEventListener("touchend", handleTouchEnd, { passive: false })
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener("touchstart", handleTouchStart)
+        container.removeEventListener("touchmove", handleTouchMove)
+        container.removeEventListener("touchend", handleTouchEnd)
+      }
+    }
+  }, [sensitivity])
+
   return (
     <div
       ref={containerRef}
@@ -180,7 +241,7 @@ export function RotatingCarousel({
             width: `${width}px`,
             height: `${height}px`,
             transformStyle: "preserve-3d",
-            transform: `perspective(1000px) rotateX(-3deg) rotateY(0deg)`,
+            transform: `perspective(${perspective}px) rotateX(-3deg) rotateY(0deg)`,
           } as React.CSSProperties
         }
       >
